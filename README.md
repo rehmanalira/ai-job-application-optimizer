@@ -32,7 +32,7 @@ ai-job-optimizer/
 ### Clone repository
 
 ```bash
-git clone <your-github-url>
+git clone https://github.com/rehmanalira/ai-job-application-optimizer
 cd ai-job-optimizer
 ```
 
