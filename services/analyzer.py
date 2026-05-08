@@ -1,32 +1,25 @@
-import re
-
-COMMON_SKILLS = [
-    "python", "java", "javascript", "react", "node", "sql",
-    "aws", "docker", "kubernetes", "machine learning",
-    "ai", "nlp", "fastapi", "django"
-]
-
-def extract_skills(job_text: str):
-    job_text_lower = job_text.lower()
-    found_skills = []
-
-    for skill in COMMON_SKILLS:
-        if skill in job_text_lower:
-            found_skills.append(skill)
-
-    return list(set(found_skills))
-
-
-def summarize_job(job_text: str):
-    sentences = re.split(r'(?<=[.!?]) +', job_text)
-    return sentences[:2]  # first 2 sentences as simple summary
+from services.ai_service import ask_llm
 
 
 def analyze_job(job_text: str):
-    skills = extract_skills(job_text)
-    summary = summarize_job(job_text)
+
+    prompt = f"""
+    Analyze this job description.
+
+    Extract:
+    1. Required technical skills
+    2. Short summary
+    3. Seniority level
+    4. Important keywords
+
+    Return response in clean text.
+
+    Job Description:
+    {job_text}
+    """
+
+    result = ask_llm(prompt)
 
     return {
-        "skills": skills,
-        "summary": summary
+        "analysis": result
     }
