@@ -2,6 +2,10 @@ from fastapi  import FastAPI
 from services.analyzer import analyze_job
 from pydantic import BaseModel
 from services.matcher import calculate_match_score
+from fastapi import UploadFile, File
+import shutil
+from services.pdf_parser import extract_text_from_pdf
+from services.skill_gap import find_missing_skills
 app = FastAPI()
 
 class JobRequest(BaseModel):
@@ -10,6 +14,13 @@ class JobRequest(BaseModel):
 class MatchRequest(BaseModel):
     cv_text: str
     job_skills: list    
+
+
+class SkillGapRequest(BaseModel):
+    cv_text: str
+    job_skills: list
+
+
 
 # for home directory
 @app.get("/")
@@ -34,3 +45,35 @@ def match_score(request: MatchRequest):
     return {
         "match_score": score
     }
+
+
+
+
+@app.post("/upload-cv")
+def upload_cv(file: UploadFile = File(...)):
+
+    file_path = f"uploads/{file.filename}"
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    extracted_text = extract_text_from_pdf(file_path)
+
+    return {
+        "filename": file.filename,
+        "extracted_text": extracted_text[:3000]
+    }
+
+
+@app.post("/skill-gap")
+def skill_gap(request: SkillGapRequest):
+
+    missing  = find_missing_skills(
+        request.cv_text,
+        request.job_skills
+    )
+
+    return {
+        "missing_skills": missing 
+    }
+
