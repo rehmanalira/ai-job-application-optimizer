@@ -1,108 +1,101 @@
-# AI Job Application Optimizer
+# AI Resume Optimizer
 
-An AI-powered system that analyzes job descriptions, extracts required skills, and helps optimize job applications.
+AI-powered ATS Resume Optimization Platform that transforms resumes into recruiter-ready CVs tailored to real job descriptions using modern AI workflows.
 
-## Features
+---
 
-- Extract key technical skills from job descriptions
-- Summarize job requirements
-- AI-ready backend architecture
-- FastAPI REST API
-- Swagger API documentation
+## Overview
 
-## Tech Stack
+This project helps job seekers improve their resumes automatically by:
 
-- Python
+- Uploading an existing resume PDF
+- Providing a target job description
+- Generating an optimized ATS-friendly resume
+- Improving recruiter readability
+- Increasing keyword relevance
+- Exporting a professional PDF resume
+
+The platform combines AI, PDF processing, ATS analysis, and modern frontend engineering into a real-world SaaS-style application.
+
+---
+
+# Features
+
+## AI Resume Optimization
+
+- Resume rewriting using AI
+- ATS keyword enhancement
+- Skills optimization
+- Professional formatting
+- Recruiter-friendly structure
+
+## ATS Analysis Dashboard
+
+- Previous ATS score
+- Optimized ATS score
+- Keyword matching
+- Missing skills analysis
+- Resume improvement insights
+
+## Resume Processing
+
+- PDF upload support
+- Automatic PDF text extraction
+- Professional PDF generation
+- Clean ATS-compatible layouts
+
+## Modern UI/UX
+
+- Responsive design
+- Dark modern interface
+- Loading states
+- Error handling
+- Smooth animations
+
+---
+
+# Tech Stack
+
+## Frontend
+
+- Next.js 15
+- React
+- Tailwind CSS
+- Framer Motion
+- Axios
+- Lucide React
+
+## Backend
+
 - FastAPI
-- Uvicorn
+- Python
+- ReportLab
+- PyMuPDF
 
-## Project Structure
+## AI Integration
 
-```bash
-ai-job-optimizer/
-│── main.py
-│── services/
-│    └── analyzer.py
-│── requirements.txt
-│── README.md
-```
+- Gemini API
+- OpenAI compatible architecture
 
-## Installation
+---
 
-### Clone repository
+# Project Architecture
 
 ```bash
-git clone https://github.com/rehmanalira/ai-job-application-optimizer
-cd ai-job-optimizer
+frontend/
+├── app/
+├── components/
+├── public/
+├── styles/
+└── .env.local
+
+backend/
+├── services/
+│   ├── ai_service.py
+│   ├── ats_score.py
+│   ├── pdf_reader.py
+│   └── pdf_generator.py
+├── generated/
+├── main.py
+└── requirements.txt
 ```
-
-### Create virtual environment
-
-```bash
-python -m venv venv
-```
-
-### Activate environment
-
-#### Windows
-
-```bash
-venv\Scripts\activate
-```
-
-#### Mac/Linux
-
-```bash
-source venv/bin/activate
-```
-
-### Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-## Run API
-
-```bash
-uvicorn main:app --reload
-```
-
-## API Documentation
-
-Open:
-
-```bash
-http://127.0.0.1:8000/docs
-```
-
-## Example Request
-
-```json
-{
-  "job_description": "We are looking for a Python developer with FastAPI and Docker experience."
-}
-```
-
-## Example Response
-
-```json
-{
-  "skills": ["python", "fastapi", "docker"],
-  "summary": [
-    "We are looking for a Python developer with FastAPI and Docker experience."
-  ]
-}
-```
-
-## Future Improvements
-
-- AI-powered skill extraction
-- CV optimization
-- Cover letter generation
-- ATS keyword matching
-- Job tracking dashboard
-
-## Author
-
-Rehman Ali
