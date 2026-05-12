@@ -1,212 +1,154 @@
-from fastapi  import FastAPI
-from services.analyzer import analyze_job
-from pydantic import BaseModel
-from services.matcher import calculate_match_score
-from fastapi import UploadFile, File
-import shutil
-from services.pdf_parser import extract_text_from_pdf
-from services.skill_gap import find_missing_skills
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from services.resume_generator import generate_resume
-from services.pdf_generator import create_resume_pdf
-from fastapi.responses import FileResponse
-import uuid
-from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 
-from fastapi.responses import FileResponse
-from services.ats_score import calculate_ats_score
-from services.skill_extractor import extract_skills
+from services.resume_request import ResumeRequest
+
 from services.ai_service import ask_llm
-from fastapi import (
-    FastAPI,
-    UploadFile,
-    File,
-    Form,
-    HTTPException
-)
-from services.pdf_reader import (
-    extract_text_from_pdf
-)
-app = FastAPI()
+from services.ats_score import calculate_ats_score
+from services.latex_resume import build_latex_resume
 
+import subprocess
+import uuid
+import os
+
+import glob
+import os
+import subprocess
+from fastapi.staticfiles import StaticFiles
+app = FastAPI()
+app.mount("/generated", StaticFiles(directory="generated"), name="generated")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # important
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-class JobRequest(BaseModel):
-    job_description: str
 
-class MatchRequest(BaseModel):
-    cv_text: str
-    job_skills: list    
+os.makedirs("generated", exist_ok=True)
 
-
-class SkillGapRequest(BaseModel):
-    cv_text: str
-    job_skills: list
-
-class ResumeRequest(BaseModel):
-    job_description: str
-    old_cv_text: str
-
-# for home directory
-@app.get("/")
-def home():
-    return {"message": "This is Test Api and it is running  successfully."}
-
-
-# post request to analyze job recive from frontend
-@app.post("/analyze-job")
-def analyze(request: JobRequest):
-    result = analyze_job(request.job_description)
-    return result
-
-@app.post("/match-score")
-def match_score(request: MatchRequest):
-
-    score = calculate_match_score(
-        request.cv_text,
-        request.job_skills
-    )
-
-    return {
-        "match_score": score
-    }
-
-
-
-
-@app.post("/upload-cv")
-def upload_cv(file: UploadFile = File(...)):
-
-    file_path = f"uploads/{file.filename}"
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    extracted_text = extract_text_from_pdf(file_path)
-
-    return {
-        "filename": file.filename,
-        "extracted_text": extracted_text[:3000]
-    }
-
-
-@app.post("/skill-gap")
-def skill_gap(request: SkillGapRequest):
-
-    missing  = find_missing_skills(
-        request.cv_text,
-        request.job_skills
-    )
-
-    return {
-        "missing_skills": missing 
-    }
-
-
-
-# @app.post("/generate-resume")
-# def generate_ats_resume(request: ResumeRequest):
-
-#     generated_resume = generate_resume(
-#         request.job_description,
-#         request.old_cv_text
-#     )
-
-#     filename = f"generated_resume_{uuid.uuid4()}.pdf"
-
-#     create_resume_pdf(
-#         generated_resume,
-#         filename
-#     )
-
-#     return {
-#         "generated_resume": generated_resume,
-#         "download_file": filename
-#     }
 @app.post("/generate-resume")
+async def generate_resume(data: ResumeRequest):
 
-async def generate_resume(
+    old_resume = f"""
+    {data.experience}
+    {data.projects}
+    {data.skills}
+    """
 
-    resume: UploadFile = File(...),
+    old_score = calculate_ats_score(
+        old_resume,
+        data.job_description
+    )
 
-    job_description: str = Form(...)
-):
+    prompt = f"""
 
-    try:
+You are an expert ATS resume writer.
 
-        pdf_bytes = await resume.read()
+Generate a highly professional ATS optimized resume.
 
-        resume_text = extract_text_from_pdf(
-            pdf_bytes
-        )
+IMPORTANT RULES:
 
-        old_score = calculate_ats_score(
-            resume_text,
-            job_description
-        )
+1. Use REAL professional company names only if experience is provided.
 
-        optimized_resume = ask_llm(
-            f"""
-            Create a professional ATS-friendly resume.
+2. If no experience is provided:
+DO NOT create fake companies.
+Instead create strong project-focused experience professionally.
 
-            Resume:
-            {resume_text}
+3. Add strong ATS keywords from the job description naturally.
 
-            Job Description:
-            {job_description}
+4. Make the resume look written by a senior recruiter.
 
-            Improve:
-            - skills
-            - ATS keywords
-            - formatting
-            - achievements
-            """
-        )
+5. Focus on:
+- ATS optimization
+- Professional writing
+- Clean formatting
+- Strong action verbs
+- Technical skills matching
+
+6. Return ONLY LaTeX sections.
+
+JOB DESCRIPTION:
+{data.job_description}
+
+CANDIDATE DETAILS:
+
+Name:
+{data.name}
+
+Experience:
+{data.experience}
+
+Projects:
+{data.projects}
+
+Education:
+{data.education}
+
+Skills:
+{data.skills}
+
+Create these sections exactly:
+
+\\section*{{PROFILE}}
+
+\\section*{{TECHNICAL SKILLS}}
+
+\\section*{{PROFESSIONAL EXPERIENCE}}
+
+\\section*{{PROJECTS}}
+
+\\section*{{EDUCATION}}
+
+Use bullet points professionally.
+"""
+
+    ai_content = ask_llm(prompt)
+
+    latex_code = build_latex_resume(data, ai_content)
+
+    file_id = str(uuid.uuid4())
+
+    tex_path = f"generated/{file_id}.tex"
+
+    pdf_path = f"generated/{file_id}.pdf"
+
+    with open(tex_path, "w", encoding="utf-8") as f:
+
+        f.write(latex_code)
+
+  
+    subprocess.run(
+    [
+        "pdflatex",
+        "-interaction=nonstopmode",
+        "-output-directory",
+        "generated",
+        tex_path,
+    ],
+    check=True,
+)
+    
+    # DELETE EXTRA FILES
+    base_name = file_id
+
+    for ext in ["aux", "log", "out", "tex"]:
+        file_to_delete = f"generated/{base_name}.{ext}"
+
+        if os.path.exists(file_to_delete):
+            os.remove(file_to_delete)
 
         new_score = calculate_ats_score(
-            optimized_resume,
-            job_description
+            latex_code,
+            data.job_description
         )
 
-        filename = "generated_resume.pdf"
+    return JSONResponse({
 
-        create_resume_pdf(
-            optimized_resume,
-            filename
-        )
+        "old_score": old_score,
+        "new_score": new_score,
+        "download_url": f"http://127.0.0.1:8000/generated/{file_id}.pdf"
 
-        return {
-
-            "old_score": old_score,
-
-            "new_score": 80,
-
-            "download_url":
-            "http://127.0.0.1:8000/download-resume",
-
-            "matched_skills": [],
-
-            "missing_skills": []
-        }
-
-    except Exception as e:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
-    
-@app.get("/download-resume")
-def download_resume():
-
-    return FileResponse(
-        path="generated_resume.pdf",
-        media_type="application/pdf",
-        filename="ATS_Resume.pdf"
-    )
+    })

@@ -1,56 +1,30 @@
 import re
 
-from collections import Counter
-
-
-def clean_text(text):
+def calculate_ats_score(text, job_description):
 
     text = text.lower()
 
-    text = re.sub(r'[^a-zA-Z0-9 ]', '', text)
+    job_description = job_description.lower()
 
-    return text.split()
+    keywords = re.findall(r'\b[a-zA-Z]+\b', job_description)
 
+    keywords = list(set(keywords))
 
-def calculate_ats_score(
-    resume_text,
-    job_description
-):
+    matched = 0
 
-    resume_words = clean_text(
-        resume_text
-    )
+    for keyword in keywords:
 
-    job_words = clean_text(
-        job_description
-    )
+        if keyword in text:
 
-    resume_counter = Counter(
-        resume_words
-    )
+            matched += 1
 
-    job_counter = Counter(
-        job_words
-    )
+    if len(keywords) == 0:
 
-    matched_keywords = 0
+        return 0
 
-    total_keywords = len(
-        set(job_words)
-    )
+    score = int((matched / len(keywords)) * 100)
 
-    for word in set(job_words):
+    if score > 98:
+        score = 98
 
-        if word in resume_counter:
-
-            matched_keywords += 1
-
-    score = int(
-        (matched_keywords / total_keywords)
-        * 100
-    )
-
-    if score > 95:
-        score = 95
-
-    return max(score, 35)
+    return score

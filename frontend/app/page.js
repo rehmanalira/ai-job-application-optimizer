@@ -1,35 +1,69 @@
 "use client";
 
 import { useState } from "react";
-
 import axios from "axios";
 
-import {
-  Upload,
-  FileText,
-  Sparkles,
-  Loader2,
-  Download,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-
-import { motion } from "framer-motion";
-
-import toast, { Toaster } from "react-hot-toast";
-
 export default function Home() {
-  const [jobDescription, setJobDescription] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
 
-  const [resumeFile, setResumeFile] = useState(null);
+    linkedin: "",
+    github: "",
+
+    experience: "",
+    projects: "",
+    education: "",
+    skills: "",
+
+    job_description: "",
+  });
 
   const [loading, setLoading] = useState(false);
 
-  const [dashboard, setDashboard] = useState(null);
+  const [error, setError] = useState("");
 
-  async function analyzeJob() {
-    if (!resumeFile || !jobDescription) {
-      toast.error("Upload resume and job description");
+  const [result, setResult] = useState(null);
+
+  function handleChange(e) {
+    setFormData({
+      ...formData,
+
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  function validateForm() {
+    if (!formData.name.trim()) {
+      return "Full Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      return "Email is required";
+    }
+
+    if (!formData.phone.trim()) {
+      return "Phone Number is required";
+    }
+
+    if (!formData.location.trim()) {
+      return "Location is required";
+    }
+
+    if (!formData.job_description.trim()) {
+      return "Job Description is required";
+    }
+
+    return null;
+  }
+
+  async function generateResume() {
+    const validationError = validateForm();
+
+    if (validationError) {
+      setError(validationError);
 
       return;
     }
@@ -37,224 +71,233 @@ export default function Home() {
     try {
       setLoading(true);
 
-      const formData = new FormData();
+      setError("");
 
-      formData.append("resume", resumeFile);
-
-      formData.append("job_description", jobDescription);
+      setResult(null);
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/generate-resume`,
 
         formData,
-
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
       );
 
-      setDashboard(response.data);
+      setResult(response.data);
+    } catch (err) {
+      console.log(err);
 
-      toast.success("Resume optimized successfully");
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Something went wrong");
+      setError(err?.response?.data?.detail || "Failed to generate resume");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Toaster />
-
-      {/* HERO */}
-
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
-            <Sparkles size={16} />
-            AI-Powered ATS Resume Optimizer
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white">
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="text-center mb-12">
+          <div className="inline-block bg-blue-500/10 border border-blue-500/30 px-6 py-2 rounded-full mb-6">
+            <span className="text-blue-400 font-medium">
+              AI Powered ATS Resume Generator
+            </span>
           </div>
 
-          <h1 className="mt-6 text-5xl font-bold tracking-tight text-slate-900">
-            Build a Recruiter-Ready Resume
+          <h1 className="text-5xl md:text-7xl font-black leading-tight">
+            Build a<span className="text-blue-500"> 10/10 ATS </span>
+            Resume
           </h1>
 
-          <p className="mt-6 text-lg text-slate-600 max-w-2xl mx-auto">
-            Upload your existing resume and job description to generate a
-            professional ATS-optimized CV.
+          <p className="text-slate-400 mt-6 text-lg max-w-3xl mx-auto leading-relaxed">
+            Generate beautiful, professional and recruiter-ready resumes
+            tailored perfectly to any job description using AI.
           </p>
-        </motion.div>
+        </div>
 
-        {/* MAIN CARD */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-2">Candidate Information</h2>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-14 bg-white rounded-3xl shadow-xl border border-slate-200 p-8"
-        >
-          {/* Upload */}
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <label className="text-sm font-semibold text-slate-700">
-                Upload Resume PDF
-              </label>
-
-              <div className="mt-3 border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center hover:border-blue-500 transition">
-                <Upload className="mx-auto text-slate-400" />
-
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="mt-4"
-                  onChange={(e) => setResumeFile(e.target.files[0])}
-                />
-
-                <p className="mt-3 text-sm text-slate-500">PDF only</p>
-              </div>
+              <p className="text-slate-400">
+                Fill your professional information carefully.
+              </p>
             </div>
 
-            {/* Job Description */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <Input
+                label="Full Name *"
+                name="name"
+                placeholder="Muhammad Abdur Rehman"
+                handleChange={handleChange}
+              />
 
-            <div>
-              <label className="text-sm font-semibold text-slate-700">
-                Job Description
-              </label>
+              <Input
+                label="Email *"
+                name="email"
+                placeholder="your@email.com"
+                handleChange={handleChange}
+              />
 
-              <textarea
-                rows={12}
-                placeholder="Paste job description..."
-                className="mt-3 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-blue-500"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+              <Input
+                label="Phone Number *"
+                name="phone"
+                placeholder="+44 7400 000000"
+                handleChange={handleChange}
+              />
+
+              <Input
+                label="Location *"
+                name="location"
+                placeholder="London, UK"
+                handleChange={handleChange}
+              />
+
+              <Input
+                label="LinkedIn"
+                name="linkedin"
+                placeholder="linkedin.com/in/username"
+                handleChange={handleChange}
+              />
+
+              <Input
+                label="GitHub"
+                name="github"
+                placeholder="github.com/username"
+                handleChange={handleChange}
               />
             </div>
+
+            <TextArea
+              label="Professional Experience"
+              name="experience"
+              placeholder="Write your experience with proper company names..."
+              handleChange={handleChange}
+            />
+
+            <TextArea
+              label="Projects"
+              name="projects"
+              placeholder="Describe your best projects..."
+              handleChange={handleChange}
+            />
+
+            <TextArea
+              label="Education"
+              name="education"
+              placeholder="Your degrees, university etc..."
+              handleChange={handleChange}
+            />
+
+            <TextArea
+              label="Skills"
+              name="skills"
+              placeholder="Laravel, PHP, React, PostgreSQL, AWS..."
+              handleChange={handleChange}
+            />
+
+            <TextArea
+              label="Job Description *"
+              name="job_description"
+              placeholder="Paste the complete job description here..."
+              handleChange={handleChange}
+              height="h-64"
+            />
+
+            {error && (
+              <div className="mt-6 bg-red-500/10 border border-red-500/40 p-4 rounded-2xl text-red-300">
+                {error}
+              </div>
+            )}
+
+            <button
+              onClick={generateResume}
+              disabled={loading}
+              className="w-full mt-8 bg-blue-600 hover:bg-blue-700 transition-all duration-300 py-5 rounded-2xl text-lg font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50"
+            >
+              {loading
+                ? "Generating Professional Resume..."
+                : "Generate ATS Resume"}
+            </button>
           </div>
 
-          {/* BUTTON */}
+          <div className="space-y-6">
+            <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
+              <h3 className="text-2xl font-bold mb-6">Features</h3>
 
-          <button
-            onClick={analyzeJob}
-            disabled={loading}
-            className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold transition flex items-center justify-center gap-3"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" />
-                Optimizing Resume...
-              </>
-            ) : (
-              <>
-                <Sparkles size={20} />
-                Generate ATS Resume
-              </>
+              <ul className="space-y-4 text-slate-300">
+                <li>✓ ATS Optimized Resume</li>
+                <li>✓ AI Tailored Content</li>
+                <li>✓ Recruiter Friendly Format</li>
+                <li>✓ Professional PDF Export</li>
+                <li>✓ Real ATS Keyword Matching</li>
+                <li>✓ Modern Resume Structure</li>
+              </ul>
+            </div>
+
+            {result && (
+              <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8">
+                <h3 className="text-2xl font-bold mb-8">ATS Dashboard</h3>
+
+                <div className="space-y-6">
+                  <div className="bg-slate-950 p-6 rounded-2xl">
+                    <p className="text-slate-400 mb-2">Previous ATS Score</p>
+
+                    <h2 className="text-5xl font-black text-red-400">
+                      {result.old_score}%
+                    </h2>
+                  </div>
+
+                  <div className="bg-slate-950 p-6 rounded-2xl">
+                    <p className="text-slate-400 mb-2">Optimized ATS Score</p>
+
+                    <h2 className="text-5xl font-black text-green-400">
+                      {result.new_score}%
+                    </h2>
+                  </div>
+
+                  <a
+                    href={result.download_url}
+                    target="_blank"
+                    className="block w-full text-center bg-green-600 hover:bg-green-700 py-4 rounded-2xl text-lg font-bold transition-all duration-300"
+                  >
+                    Download Resume PDF
+                  </a>
+                </div>
+              </div>
             )}
-          </button>
-        </motion.div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
 
-        {/* RESULTS */}
+function Input({ label, name, placeholder, handleChange }) {
+  return (
+    <div>
+      <label className="block mb-2 text-sm text-slate-300">{label}</label>
 
-        {dashboard && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-12 grid lg:grid-cols-3 gap-6"
-          >
-            {/* ATS */}
+      <input
+        type="text"
+        name={name}
+        placeholder={placeholder}
+        onChange={handleChange}
+        className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 p-4 rounded-2xl outline-none transition-all"
+      />
+    </div>
+  );
+}
 
-            <div className="bg-white rounded-3xl shadow-lg p-6 border">
-              <h2 className="text-xl font-bold">ATS Analysis</h2>
+function TextArea({ label, name, placeholder, handleChange, height = "h-36" }) {
+  return (
+    <div className="mt-6">
+      <label className="block mb-2 text-sm text-slate-300">{label}</label>
 
-              <div className="mt-6 space-y-4">
-                <div className="bg-slate-100 p-4 rounded-2xl">
-                  <p className="text-sm text-slate-500">Previous ATS Score</p>
-
-                  <h3 className="text-3xl font-bold">{dashboard.old_score}%</h3>
-                </div>
-
-                <div className="bg-green-100 p-4 rounded-2xl">
-                  <p className="text-sm text-green-700">Optimized ATS Score</p>
-
-                  <h3 className="text-3xl font-bold text-green-700">
-                    {dashboard.new_score}%
-                  </h3>
-                </div>
-              </div>
-            </div>
-
-            {/* Skills */}
-
-            <div className="bg-white rounded-3xl shadow-lg p-6 border">
-              <h2 className="text-xl font-bold">Skills Matched</h2>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {dashboard.matched_skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm flex items-center gap-2"
-                  >
-                    <CheckCircle2 size={14} />
-
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Missing */}
-
-            <div className="bg-white rounded-3xl shadow-lg p-6 border">
-              <h2 className="text-xl font-bold">Missing Skills</h2>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {dashboard.missing_skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="bg-red-100 text-red-700 px-3 py-2 rounded-full text-sm flex items-center gap-2"
-                  >
-                    <AlertCircle size={14} />
-
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* DOWNLOAD */}
-
-            <div className="lg:col-span-3 bg-white rounded-3xl shadow-lg p-8 border text-center">
-              <FileText className="mx-auto text-blue-600" size={48} />
-
-              <h2 className="mt-4 text-2xl font-bold">
-                Optimized Resume Ready
-              </h2>
-
-              <p className="mt-2 text-slate-500">
-                Download your ATS-friendly professional resume.
-              </p>
-
-              <a
-                href={dashboard.download_url}
-                target="_blank"
-                className="inline-flex items-center gap-3 mt-6 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold transition"
-              >
-                <Download size={18} />
-                Download Resume PDF
-              </a>
-            </div>
-          </motion.div>
-        )}
-      </section>
+      <textarea
+        name={name}
+        placeholder={placeholder}
+        onChange={handleChange}
+        className={`w-full bg-slate-800 border border-slate-700 focus:border-blue-500 p-4 rounded-2xl outline-none transition-all ${height}`}
+      />
     </div>
   );
 }
