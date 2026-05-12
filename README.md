@@ -120,16 +120,6 @@ Resume Download Ready
 
 ---
 
-# Screenshots
-
-## Dashboard
-
-Add application screenshots here after deployment.
-
-```bash
-/public/screenshots/dashboard.png
-```
-
 ---
 
 # Project Structure
@@ -167,8 +157,8 @@ ai-job-search/
 # 1. Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-job-search.git
-cd ai-job-search
+git clone https://github.com/rehmanalira/ai-job-application-optimizer.git
+cd ai-job-application-optimizer
 ```
 
 ---
@@ -323,19 +313,6 @@ The ATS engine analyzes:
 Target ATS score:
 
 - 80% to 95%
-
----
-
-# Future Improvements
-
-- AI Cover Letter Generator
-- LinkedIn Profile Optimizer
-- Resume Version Management
-- Job Auto Apply System
-- Recruiter Analytics Dashboard
-- AI Interview Preparation
-- Multi-language Support
-- Multi-template Support
 
 ---
 
