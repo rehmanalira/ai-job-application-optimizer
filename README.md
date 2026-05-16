@@ -298,6 +298,17 @@ GET /download/{file_name}
 
 ---
 
+
+## Project Images
+
+<img width="1603" height="717" alt="image" src="https://github.com/user-attachments/assets/aa4c912f-0fff-4522-9323-adedcccd7505" />
+<img width="867" height="740" alt="image" src="https://github.com/user-attachments/assets/4b9eea3b-b90b-417c-bb5b-6bced1aa2a35" />
+
+## PDF Created BY AI
+[9e2e739f-377d-43fd-b173-da23ec6cdca5.pdf](https://github.com/user-attachments/files/27852312/9e2e739f-377d-43fd-b173-da23ec6cdca5.pdf)
+
+
+
 # ATS Scoring Logic
 
 The ATS engine analyzes:
